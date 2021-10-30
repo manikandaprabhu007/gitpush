@@ -1,0 +1,163 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'dart:async';
+import 'package:http/http.dart' as http;
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Flutter Demo',
+      theme: ThemeData(
+
+        primarySwatch: Colors.blue,
+      ),
+      home: const MyHomePage(),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({Key? key}) : super(key: key);
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+
+  Future<List <User>> _getUsers()async{
+
+  var data =await  http.get(Uri.parse("https://manikandaprabhu007.github.io/netdata/myjson.json"));
+
+  var jsondata=json.decode(data.body);
+
+  List<User>  users=[];
+
+  for(var u in jsondata){
+
+    User user=User(u["name"],u["nickname"],u["img"],u["birthday"]);
+
+    users.add(user);
+
+  }
+
+  return users;
+
+
+
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('MyTeam Members Details'),
+      ),
+      body: Container(
+        child: FutureBuilder(
+          future: _getUsers(),
+          builder: (BuildContext contect,AsyncSnapshot snapshot){
+
+
+              if(snapshot.data==null){
+
+                return Container(
+                  child: Center(child: Text('Loading...')),
+                );
+              }
+            else {
+                return ListView.builder(
+
+                    itemCount: snapshot.data.length,
+                    itemBuilder: (BuildContext context, int index) {
+                      return ListTile(
+                        leading: CircleAvatar(
+                          backgroundImage: NetworkImage(snapshot.data[index].img),
+                        ),
+                        title: Text(snapshot.data[index].name),
+                        subtitle: Text(snapshot.data[index].nickname),
+
+                        onTap: (){
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsPage(snapshot.data[index].name,snapshot.data[index].nickname,snapshot.data[index].img,snapshot.data[index].birth)));
+                        },
+                      );
+                    }
+                );
+              }
+          },
+        ),
+
+      ),
+    );
+  }
+}
+
+class DetailsPage extends StatelessWidget {
+
+
+ final String uname,unickname,img,birth;
+
+  DetailsPage(this.uname,this.unickname,this.img,this.birth);
+
+
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+
+      home:Scaffold(
+
+        appBar: AppBar(
+
+          leading: CircleAvatar(
+            backgroundImage: NetworkImage(img),
+          ),
+          title: Text('$uname'),
+          centerTitle: true,
+        ),
+
+
+           body: Column(
+             children: <Widget>[
+               Center(
+
+                 child: Card(
+                   color: Colors.lightBlueAccent,
+                  child: CircleAvatar(
+                    maxRadius: 150.0,
+                   backgroundImage: NetworkImage(img),
+                   ),
+                 ),
+               ),
+
+               Container(
+                 child: Text('$birth'),
+               ),
+             ],
+           ),
+        ),
+      );
+
+  }
+}
+
+
+class User{
+
+
+  final  String name;
+  final String img;
+  final String nickname;
+  final String birth;
+
+  User(this.name,this.nickname,this.img,this.birth);
+
+}
